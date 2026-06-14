@@ -2167,8 +2167,251 @@ function toggleMenu() {
 }
 
 /* ============================================================
-   MEAL RENDERING
+   CART SYSTEM
    ============================================================ */
+.cart-fab {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  z-index: 999;
+  background: var(--lime);
+  color: var(--black);
+  border: none;
+  border-radius: 999px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 32px rgba(184,244,67,0.4);
+  transition: all var(--transition);
+  font-family: inherit;
+}
+.cart-fab:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(184,244,67,0.5); }
+.cart-fab__count {
+  background: var(--black);
+  color: var(--lime);
+  border-radius: 999px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 0 6px;
+}
+body.ar .cart-fab { right: auto; left: 24px; }
+
+/* Cart Drawer */
+.cart-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.cart-overlay.open { opacity: 1; pointer-events: all; }
+
+.cart-drawer {
+  position: fixed;
+  top: 0;
+  right: -420px;
+  width: 420px;
+  max-width: 100vw;
+  height: 100%;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: -8px 0 48px rgba(0,0,0,0.5);
+}
+.cart-drawer.open { right: 0; }
+body.ar .cart-drawer { right: auto; left: -420px; border-left: none; border-right: 1px solid var(--border); }
+body.ar .cart-drawer.open { left: 0; }
+
+.cart-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cart-header__title { font-size: 20px; font-weight: 800; }
+.cart-close {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--white);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.cart-close:hover { background: var(--danger); border-color: var(--danger); }
+
+.cart-items {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cart-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.cart-empty__icon { font-size: 56px; margin-bottom: 16px; }
+.cart-empty__text { font-size: 16px; font-weight: 600; }
+
+.cart-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.cart-item__img {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.cart-item__info { flex: 1; min-width: 0; }
+.cart-item__name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cart-item__price { font-size: 13px; color: var(--lime); font-family: var(--font-mono); margin-top: 4px; }
+.cart-item__controls { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.cart-item__qty-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--white);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+.cart-item__qty-btn:hover { border-color: var(--lime); color: var(--lime); }
+.cart-item__qty { font-size: 14px; font-weight: 700; min-width: 24px; text-align: center; }
+.cart-item__remove {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  transition: color var(--transition);
+}
+.cart-item__remove:hover { color: var(--danger); }
+body.ar .cart-item__remove { margin-left: 0; margin-right: auto; }
+
+.cart-footer {
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.cart-total-label { font-size: 15px; color: var(--muted); }
+.cart-total-value { font-size: 26px; font-weight: 900; font-family: var(--font-mono); color: var(--lime); }
+.cart-checkout-btn {
+  width: 100%;
+  background: var(--lime);
+  color: var(--black);
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+  margin-bottom: 10px;
+}
+.cart-checkout-btn:hover { background: #c8f85a; transform: translateY(-2px); }
+.cart-wa-btn {
+  width: 100%;
+  background: #25d366;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+.cart-wa-btn:hover { background: #1db954; transform: translateY(-2px); }
+
+/* Add to cart btn on meal cards */
+.meal-card__add-btn {
+  width: 100%;
+  background: transparent;
+  color: var(--lime);
+  border: 2px solid var(--lime);
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+  margin-top: 8px;
+}
+.meal-card__add-btn:hover { background: var(--lime); color: var(--black); }
+.meal-card__add-btn.added { background: var(--lime); color: var(--black); }
+
+/* Checkout success toast */
+.toast {
+  position: fixed;
+  bottom: 160px;
+  right: 24px;
+  background: var(--lime);
+  color: var(--black);
+  border-radius: 14px;
+  padding: 14px 20px;
+  font-weight: 800;
+  font-size: 15px;
+  z-index: 2000;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.3s;
+  pointer-events: none;
+  max-width: 280px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+body.ar .toast { right: auto; left: 24px; }
+
 const catLabels = {
   bulk:  { en: 'BULK 💪',  ar: 'تضخيم 💪', cls: 'cat-bulk' },
   cut:   { en: 'CUT 🔥',   ar: 'تنشيف 🔥', cls: 'cat-cut' },
@@ -2189,6 +2432,8 @@ function mealCardHTML(m) {
   const ingLabel = currentLang === 'ar' ? 'المكونات:' : 'Ingredients:';
   const sarLabel = currentLang === 'ar' ? 'جنيه' : 'EGP';
 
+  const addLabel  = currentLang === 'ar' ? '🛒 أضف للسلة' : '🛒 Add to Cart';
+
   return `
     <div class="meal-card" data-category="${m.category}">
       <div class="meal-card__img">
@@ -2207,6 +2452,7 @@ function mealCardHTML(m) {
         <div class="meal-card__ingredients">${ingLabel} ${ing}</div>
         <div class="meal-card__footer">
           <button class="meal-card__order-btn" onclick="navigate('order')">${orderLabel}</button>
+          <button class="meal-card__add-btn" id="add-btn-${m.id}" onclick="addToCart(${m.id})">${addLabel}</button>
         </div>
       </div>
     </div>`;
@@ -2352,22 +2598,46 @@ function submitOrder() {
     return;
   }
 
-  const mealName = meal.split('|')[0];
-  const qty = document.getElementById('order-qty')?.value || 1;
+  const [mealName, priceStr] = meal.split('|');
+  const price = parseFloat(priceStr) || 0;
+  const qty   = parseInt(document.getElementById('order-qty')?.value) || 1;
+  const total = price * qty;
   const address = document.getElementById('order-address')?.value || '';
-  const notes = document.getElementById('order-notes')?.value || '';
+  const notes   = document.getElementById('order-notes')?.value || '';
+  const txId    = 'YFK-' + Date.now();
 
+  // ✅ GA4 Lead Event
+  gtag('event', 'generate_lead', {
+    currency: 'EGP',
+    value: total
+  });
+
+  // ✅ GA4 Purchase Event (Ecommerce)
+  gtag('event', 'purchase', {
+    transaction_id: txId,
+    value: total,
+    currency: 'EGP',
+    items: [{
+      item_id: mealName.replace(/\s+/g, '_').toLowerCase(),
+      item_name: mealName,
+      price: price,
+      quantity: qty,
+      item_category: 'Meal'
+    }]
+  });
+
+  // Open WhatsApp
   const waMsg = encodeURIComponent(
-    `Hello Y FIT KITCHEN!\n\nName: ${name}\nPhone: ${phone}\nMeal: ${mealName}\nQty: ${qty}\nAddress: ${address}\nNotes: ${notes}\n\nPlease confirm my order.`
+    `مرحبا Y FIT KITCHEN! 🥗\n\nالاسم: ${name}\nالهاتف: ${phone}\nالوجبة: ${mealName}\nالكمية: ${qty}\nالعنوان: ${address}\nملاحظات: ${notes}\nالإجمالي: ${total} جنيه\n\nأرجو تأكيد الطلب.`
   );
-
   window.open(`https://wa.me/201022483284?text=${waMsg}`, '_blank');
+  showToast(currentLang === 'ar' ? '✅ تم إرسال طلبك!' : '✅ Order sent!');
 }
 
 function submitContact() {
-  const name = document.getElementById('contact-name')?.value?.trim();
+  const name  = document.getElementById('contact-name')?.value?.trim();
   const email = document.getElementById('contact-email')?.value?.trim();
-  const msg = document.getElementById('contact-message')?.value?.trim();
+  const msg   = document.getElementById('contact-message')?.value?.trim();
 
   if (!name || !email || !msg) {
     const alert_msg = currentLang === 'ar' ? 'يرجى ملء جميع الحقول.' : 'Please fill in all fields.';
@@ -2375,14 +2645,252 @@ function submitContact() {
     return;
   }
 
-  const waMsg = encodeURIComponent(`Hi! I'm ${name} (${email})\n\n${msg}`);
+  // ✅ GA4 Contact Event
+  gtag('event', 'contact', { method: 'whatsapp' });
+
+  const waMsg = encodeURIComponent(`مرحبا! أنا ${name} (${email})\n\n${msg}`);
   window.open(`https://wa.me/201022483284?text=${waMsg}`, '_blank');
+  showToast(currentLang === 'ar' ? '✅ تم الإرسال!' : '✅ Message sent!');
+}
+
+/* ============================================================
+   CART SYSTEM
+   ============================================================ */
+let cart = []; // [{id, name, nameAr, price, qty, img}]
+
+function addToCart(mealId) {
+  const m = meals.find(x => x.id === mealId);
+  if (!m) return;
+
+  const existing = cart.find(x => x.id === mealId);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id: m.id, name: m.en, nameAr: m.ar, price: m.price, qty: 1, img: m.img, category: m.category });
+  }
+
+  updateCartUI();
+
+  // ✅ GA4 Add to Cart Event
+  gtag('event', 'add_to_cart', {
+    currency: 'EGP',
+    value: m.price,
+    items: [{
+      item_id: String(m.id),
+      item_name: m.en,
+      price: m.price,
+      quantity: 1,
+      item_category: m.category
+    }]
+  });
+
+  // Button feedback
+  const btn = document.getElementById(`add-btn-${mealId}`);
+  if (btn) {
+    btn.classList.add('added');
+    btn.textContent = currentLang === 'ar' ? '✓ أُضيف!' : '✓ Added!';
+    setTimeout(() => {
+      btn.classList.remove('added');
+      btn.textContent = currentLang === 'ar' ? '🛒 أضف للسلة' : '🛒 Add to Cart';
+    }, 1500);
+  }
+
+  showToast(currentLang === 'ar' ? `✅ ${m.ar} أُضيف للسلة` : `✅ ${m.en} added to cart`);
+}
+
+function removeFromCart(mealId) {
+  const item = cart.find(x => x.id === mealId);
+  if (!item) return;
+
+  // ✅ GA4 Remove from Cart
+  gtag('event', 'remove_from_cart', {
+    currency: 'EGP',
+    value: item.price * item.qty,
+    items: [{ item_id: String(item.id), item_name: item.name, price: item.price, quantity: item.qty }]
+  });
+
+  cart = cart.filter(x => x.id !== mealId);
+  updateCartUI();
+}
+
+function changeQty(mealId, delta) {
+  const item = cart.find(x => x.id === mealId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) { removeFromCart(mealId); return; }
+  updateCartUI();
+}
+
+function updateCartUI() {
+  const totalItems = cart.reduce((s, x) => s + x.qty, 0);
+  const totalPrice = cart.reduce((s, x) => s + x.price * x.qty, 0);
+
+  // FAB
+  const fab = document.getElementById('cart-fab');
+  const countEl = document.getElementById('cart-count');
+  if (fab) fab.style.display = totalItems > 0 ? 'flex' : 'none';
+  if (countEl) countEl.textContent = totalItems;
+
+  // Items list
+  const list = document.getElementById('cart-items-list');
+  const empty = document.getElementById('cart-empty');
+  const footer = document.getElementById('cart-footer');
+  const totalEl = document.getElementById('cart-total');
+
+  if (!list) return;
+
+  if (cart.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(empty || document.createElement('div'));
+    if (empty) empty.style.display = 'block';
+    if (footer) footer.style.display = 'none';
+    return;
+  }
+
+  if (empty) empty.style.display = 'none';
+  if (footer) footer.style.display = 'block';
+  if (totalEl) totalEl.textContent = totalPrice.toLocaleString();
+
+  list.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <img class="cart-item__img" src="${item.img}" alt="${currentLang === 'ar' ? item.nameAr : item.name}" onerror="this.style.display='none'"/>
+      <div class="cart-item__info">
+        <div class="cart-item__name">${currentLang === 'ar' ? item.nameAr : item.name}</div>
+        <div class="cart-item__price">${(item.price * item.qty).toLocaleString()} ${currentLang === 'ar' ? 'جنيه' : 'EGP'}</div>
+        <div class="cart-item__controls">
+          <button class="cart-item__qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+          <span class="cart-item__qty">${item.qty}</span>
+          <button class="cart-item__qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+        </div>
+      </div>
+      <button class="cart-item__remove" onclick="removeFromCart(${item.id})">🗑</button>
+    </div>
+  `).join('');
+}
+
+function openCart() {
+  document.getElementById('cart-drawer').classList.add('open');
+  document.getElementById('cart-overlay').classList.add('open');
+
+  // ✅ GA4 View Cart
+  const totalPrice = cart.reduce((s, x) => s + x.price * x.qty, 0);
+  gtag('event', 'view_cart', {
+    currency: 'EGP',
+    value: totalPrice,
+    items: cart.map(x => ({ item_id: String(x.id), item_name: x.name, price: x.price, quantity: x.qty }))
+  });
+}
+
+function closeCart() {
+  document.getElementById('cart-drawer').classList.remove('open');
+  document.getElementById('cart-overlay').classList.remove('open');
+}
+
+function checkoutGA() {
+  if (cart.length === 0) return;
+  const totalPrice = cart.reduce((s, x) => s + x.price * x.qty, 0);
+  const txId = 'YFK-' + Date.now();
+
+  // ✅ GA4 Begin Checkout
+  gtag('event', 'begin_checkout', {
+    currency: 'EGP',
+    value: totalPrice,
+    items: cart.map(x => ({ item_id: String(x.id), item_name: x.name, price: x.price, quantity: x.qty, item_category: x.category }))
+  });
+
+  // ✅ GA4 Purchase (Ecommerce Revenue)
+  gtag('event', 'purchase', {
+    transaction_id: txId,
+    value: totalPrice,
+    currency: 'EGP',
+    shipping: 0,
+    tax: 0,
+    items: cart.map(x => ({ item_id: String(x.id), item_name: x.name, price: x.price, quantity: x.qty, item_category: x.category }))
+  });
+
+  // Build WhatsApp message
+  const itemLines = cart.map(x => `- ${currentLang === 'ar' ? x.nameAr : x.name} × ${x.qty} = ${x.price * x.qty} ${currentLang === 'ar' ? 'جنيه' : 'EGP'}`).join('\n');
+  const waMsg = encodeURIComponent(
+    `مرحبا Y FIT KITCHEN! 🥗\n\nطلبي:\n${itemLines}\n\nالإجمالي: ${totalPrice} جنيه\n\nأرجو تأكيد الطلب وإرسال تفاصيل التوصيل.`
+  );
+
+  window.open(`https://wa.me/201022483284?text=${waMsg}`, '_blank');
+  showToast(currentLang === 'ar' ? '🎉 تم إرسال طلبك بنجاح!' : '🎉 Order placed successfully!');
+
+  // Clear cart
+  cart = [];
+  updateCartUI();
+  closeCart();
+}
+
+function checkoutWhatsApp() {
+  // ✅ GA4 WhatsApp Click Event
+  gtag('event', 'whatsapp_click', { event_category: 'engagement', event_label: 'cart_checkout' });
+  checkoutGA();
+}
+
+/* WhatsApp floating btn tracking */
+document.querySelectorAll('a[href*="wa.me"]').forEach(a => {
+  a.addEventListener('click', () => {
+    gtag('event', 'whatsapp_click', { event_category: 'engagement', event_label: a.closest('[data-en]')?.getAttribute('data-en') || 'whatsapp' });
+  });
+});
+
+/* Toast helper */
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
 // Init
 renderMeals();
 calcNutrition();
 calcPrice();
+updateCartUI();
 </script>
+<!-- ============================================================
+     CART FAB BUTTON
+     ============================================================ -->
+<button class="cart-fab" onclick="openCart()" id="cart-fab" style="display:none;">
+  🛒 <span data-en="Cart" data-ar="السلة">Cart</span>
+  <span class="cart-fab__count" id="cart-count">0</span>
+</button>
+
+<!-- Cart Overlay -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCart()"></div>
+
+<!-- Cart Drawer -->
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-header">
+    <div class="cart-header__title">🛒 <span data-en="Your Cart" data-ar="سلة التسوق">Your Cart</span></div>
+    <button class="cart-close" onclick="closeCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cart-items-list">
+    <div class="cart-empty" id="cart-empty">
+      <div class="cart-empty__icon">🛒</div>
+      <div class="cart-empty__text" data-en="Your cart is empty" data-ar="سلتك فارغة">Your cart is empty</div>
+    </div>
+  </div>
+  <div class="cart-footer" id="cart-footer" style="display:none;">
+    <div class="cart-total-row">
+      <span class="cart-total-label" data-en="Total" data-ar="الإجمالي">Total</span>
+      <span class="cart-total-value"><span id="cart-total">0</span> <span style="font-size:14px;" data-en="EGP" data-ar="جنيه">EGP</span></span>
+    </div>
+    <button class="cart-checkout-btn" onclick="checkoutGA()">
+      ✅ <span data-en="Confirm Order" data-ar="تأكيد الطلب">Confirm Order</span>
+    </button>
+    <button class="cart-wa-btn" onclick="checkoutWhatsApp()">
+      <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+      <span data-en="Order via WhatsApp" data-ar="اطلب عبر واتساب">Order via WhatsApp</span>
+    </button>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
 </body>
 </html>
